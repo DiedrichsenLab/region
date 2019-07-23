@@ -41,7 +41,10 @@ if (~isempty(voxelspace))
 end;
 
 for c=1:length(R)
-    fprintf('%d.',c);
+    
+    %Printing progress
+    if ~mod(c,10); fprintf('%d out of %d \n',c,length(R)); end
+    
     if (~isempty(R{c}))
         switch  (R{c}.type)
             case 'point'
@@ -140,7 +143,7 @@ for c=1:length(R)
                 % open with gifti or caret_load
                 if strcmp(R{c}.white(end-3:end),'.gii'), % MK
                     c1=gifti(R{c}.white);
-                    c1_data=c1.vertices;  
+                    c1_data=c1.vertices;
                 else
                     c1=caret_load(R{c}.white); 
                     c1_data=c1.data;
@@ -219,9 +222,6 @@ for c=1:length(R)
                         baryc     = cartesianToBarycentric(TR,tri,repmat(R{c}.data(i,:),numTri,1));
                         baryc(baryc<0)=0;
                         baryc     = bsxfun(@rdivide,baryc,sum(baryc,2));        % Force the points to lie on the triangle
-                        % Eva - remove the NaNs
-                        baryc(isnan(baryc))=0;
-                        %
                         cart      = barycentricToCartesian(TR,tri,baryc);       % Find the closest point
                         sqdist    = sum(bsxfun(@minus,cart,p0).^2,2);           % Calcualte squared distance
                         [~,best]  = min(sqdist);
@@ -265,35 +265,6 @@ for c=1:length(R)
                 [i,j,k]=ind2sub(V.dim,double(indices{1}'));
                 [x,y,z]=spmj_affine_transform(i,j,k,V.mat);
                 R{c}.data=[x,y,z];
-            case 'surf_nodes_wb'
-                c1=gifti(R{c}.white);
-                c2=gifti(R{c}.pial);
-                c1_data=c1.vertices;
-                c2_data=c2.vertices;
-                
-                V=spm_vol(R{c}.image);
-                V.mask=spm_read_vols(V)~=0; % Define mask image: This is fixed 31/1
-                
-                % Find the coordinates between surfaces and all touching
-                % voxels
-                allcoords=surfing_nodeidxs2coords(c1_data(R{c}.location,:)',c2_data(R{c}.location,:)',[],R{c}.linedef);
-                alllinvoxidxs=surfing_coords2linvoxelidxs(allcoords,V);
-                indices=unique(alllinvoxidxs(~isnan(alllinvoxidxs)));
-                N=length(indices);
-                R{c}.linvoxidxs=indices;
-                
-                % calculate the Eucledian coordinates of voxel centers
-                [i,j,k]=ind2sub(V.dim,double(indices));
-                [x,y,z]=spmj_affine_transform(i,j,k,V.mat);
-                R{c}.data=[x,y,z];
-                
-                % Track the weight of each voxels: how many vertices are in
-                % the voxel?
-                weight=zeros(size(indices));
-                for i=1:N
-                    weight(i)=sum(sum(alllinvoxidxs==indices(i)));
-                end;
-                R{c}.weight=weight;
         end;
     end;
     % If necessary, apply mask.
