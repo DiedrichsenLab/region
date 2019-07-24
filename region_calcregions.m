@@ -12,7 +12,7 @@ function R=region_calcregions(R,varargin)
 % 'exlcude_thres',0.8
 % If the region has a structure in field 'mask', the region will be masked
 % by that image
-% j.diedrichsen@bangor.ac.uk
+% joern.diedrichsen@googlemail.com
 % 31/1/2011: Fixed a number of issues with the masking of surface-based ROI
 % 25/03/2017: Maedbh King - added check for .gii surface files in 'surf_nodes' and
 % 'surf_circle'
@@ -138,23 +138,12 @@ for c=1:length(R)
                 end;
             case 'surf_nodes'  % Set of surface nodes
                 % open with gifti or caret_load
-                if strcmp(R{c}.white(end-3:end),'.gii'), % MK
-                    c1=gifti(R{c}.white);
-                    c1_data=c1.vertices;  
-                else
-                    c1=caret_load(R{c}.white); 
-                    c1_data=c1.data;
-                end
-                if strcmp(R{c}.pial(end-3:end),'.gii'),
-                    c2=gifti(R{c}.pial);
-                    c2_data=c2.vertices;
-                else
-                    c2=caret_load(R{c}.pial);
-                    c2_data=c2.data;
-                end
+                c1_data=load_surf(R{c}.white); 
+                c2_data=load_surf(R{c}.pial);
                 
+                % Use image for mask and voxelspace. 
                 V=spm_vol(R{c}.image);
-                V.mask=spm_read_vols(V)~=0; % Define mask image: This is fixed 31/1
+                V.mask=spm_read_vols(V)~=0; 
                 
                 % Find the coordinates between surfaces and all touching
                 % voxels
@@ -169,7 +158,9 @@ for c=1:length(R)
                 [x,y,z]=spmj_affine_transform(i,j,k,V.mat);
                 R{c}.data=[x,y,z];
                 
-                % Track the weight of each voxels: how many vertices are in
+                % Track the mapping of nodes to voxels 
+                R{c}.location2linvoxindxs = alllinvoxidxs;
+                % determine the weight of each voxels: how many vertices are in
                 % the voxel?
                 weight=zeros(size(indices));
                 for i=1:N
@@ -182,21 +173,13 @@ for c=1:length(R)
                 % projection both in barycentric coordinates and in average
                 % flat coordinates
                 if (isfield(R{c},'flat'))
-                    if strcmp(R{c}.flat(end-3:end),'.gii'), % MK
-                        c3=gifti(R{c}.flat);
-                        c3_data=c3.vertices;
-                    else
-                        c3=caret_load(R{c}.flat);
-                        c3_data=c3.data;
+                    [c3_data,topo_data]=load_surf(R{c}.flat); 
+                    
+                    % Load topology if not included in the the surface
+                    if (isempty(topo))
+                        topo_data=load_surf(R{c}.topo);
                     end
-                    % Load topology for accurate mapping
-                    if strcmp(R{c}.topo(end-3:end),'.gii'), % MK
-                        topo=gifti(R{c}.topo);
-                        topo_data=topo.vertices;
-                    else
-                        topo=caret_load(R{c}.topo);
-                        topo_data=topo.data;
-                    end
+                    
                     ca=(c1_data+c2_data)/2; % Average coordinateds
                     TR=triangulation(topo_data,ca(:,1),ca(:,2),ca(:,3));                % Create triangulation
                     
@@ -238,26 +221,10 @@ for c=1:length(R)
                 end;
             case 'surf_circle' % Does a surface-based circular ROI at a certain node
                 % open with gifti or caret_load
-                if strcmp(R{c}.white),
-                    c1=gifti(R{c}.white);
-                    c1_data=c1.vertices;
-                else
-                    c1=caret_load(R{c}.white);
-                    c1_data=c1.data;
-                end
-                if strcmp(R{c}.pial),
-                    c2=gifti(R{c}.pial);
-                    c2_data=c2.vertices;
-                else
-                    c2=caret_load(R{c}.pial);
-                    c2_data=c2.data;
-                end
-                if strcmp(R{c}.topo),
-                    to=gifti(R{c}.topo);
-                    to_data=to.vertices;
-                else
-                    to=caret_load(R{c}.topo);
-                    to_data=to.data;
+                [c1_data,topo_data]=load_surf(R{c}.white); 
+                [c2_data]=load_surf(R{c}.pial); 
+                if (isempty(topo_data))
+                    topo_data=load_surf(R{c}.topo);
                 end
                 V=spm_vol(R{c}.image);
                 V.mask=spm_read_vols(V)~=0;
@@ -265,6 +232,7 @@ for c=1:length(R)
                 [i,j,k]=ind2sub(V.dim,double(indices{1}'));
                 [x,y,z]=spmj_affine_transform(i,j,k,V.mat);
                 R{c}.data=[x,y,z];
+
             case 'surf_nodes_wb'
                 c1=gifti(R{c}.white);
                 c2=gifti(R{c}.pial);
@@ -357,3 +325,16 @@ end;
 if (exist('Rnew'))
     R=R{1};
 end;
+
+function [vert,topo]=load_surf(filename)
+topo=[]; 
+if strcmp(filename(end-3:end),'.gii'), 
+    c=gifti(filename);
+    vert=c.vertices;
+    if (isfield(c,'faces'))
+        topo=c.faces; 
+    end; 
+else
+    c=caret_load(name);
+    vert=c.data;
+end; 
