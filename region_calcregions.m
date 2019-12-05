@@ -335,6 +335,6 @@ if strcmp(filename(end-3:end),'.gii'),
         topo=c.faces; 
     end; 
 else
-    c=caret_load(name);
+    c=caret_load(filename);
     vert=c.data;
 end; 
