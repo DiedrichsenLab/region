@@ -53,7 +53,7 @@ for i=1:num_images
         fprintf('.'); 
     end; 
     if(verbose & mod(i,100)==0)
-        fprintf('\n'); 
+        fprintf('%d/%d\n',i,num_images); 
     end; 
 end; 
 

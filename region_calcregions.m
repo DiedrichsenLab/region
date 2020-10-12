@@ -176,7 +176,7 @@ for c=1:length(R)
                     [c3_data,topo_data]=load_surf(R{c}.flat); 
                     
                     % Load topology if not included in the the surface
-                    if (isempty(topo))
+                    if (isempty(topo_data))
                         topo_data=load_surf(R{c}.topo);
                     end
                     
