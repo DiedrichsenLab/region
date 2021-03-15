@@ -41,8 +41,8 @@ if (~isempty(voxelspace))
 end;
 
 for c=1:length(R)
-    fprintf('%d.',c);
     if (~isempty(R{c}))
+        fprintf('%d.',c);
         switch  (R{c}.type)
             case 'point'
                 for i=1:size(R{c}.location,1);
