@@ -20,15 +20,17 @@ num_images=length(V);
 num_regions=length(regions); 
 verbose =0; 
 interp=0; %  Interpolation: 0 nearest neighbour, 1: trilinear interpol 
+ignore_nan = 0; % During trilinear interpolation, shoud nan's be set to zero? 
 
-vararginoptions(varargin,{'interp','verbose'}); 
+vararginoptions(varargin,{'interp','verbose','ignore_nan'}); 
 
 % See if regions are already calculated, if not, do so 
 for r=1:num_regions
     if (~isfield(regions{r},'data'))
+        warning('Region %s not calculated - doing so now',regions{r}.name);
         regions{r}=region_calcregions(regions{r}); 
-    end;
-end;
+    end
+end
 
 % Loop over images and extract the data 
 % Do this for all regions at the same time to increase speed 
@@ -45,9 +47,16 @@ for i=1:num_images
             else 
                 from(r)=size(X,1)+1;
                 to(r)=size(X,1);
-            end; 
-        end;
-    end;
+            end 
+        end
+    end
+    % If ignore_nan, load the image and replace NaNs with zeros
+    if (ignore_nan)
+        V(i).dat=spm_read_vols(V(i)); 
+        V(i).dt = [64 0];    % Set number format to double 
+        V(i).pinfo = [1 0 0]'; % set scaling to zero becuase done 
+        V(i).dat(isnan(V(i).dat)) = 0; 
+    end
     A(:,i)=spm_sample_vol(V(i),X,Y,Z,interp); % Sampling of volume
     if(verbose & mod(i,10)==0)
         fprintf('.'); 
