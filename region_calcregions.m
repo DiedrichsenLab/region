@@ -228,7 +228,7 @@ for c=1:length(R)
                 end
                 V=spm_vol(R{c}.image);
                 V.mask=spm_read_vols(V)~=0;
-                [indices,VMIN,VMAX,vORr]=surfing_voxelselection(c1_data',c2_data',to_data',R{c}.radius,V,R{c}.location);
+                [indices,VMIN,VMAX,vORr]=surfing_voxelselection(c1_data',c2_data',topo_data',R{c}.radius,V,R{c}.location);
                 [i,j,k]=ind2sub(V.dim,double(indices{1}'));
                 [x,y,z]=spmj_affine_transform(i,j,k,V.mat);
                 R{c}.data=[x,y,z];
