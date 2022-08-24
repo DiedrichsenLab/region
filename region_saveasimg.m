@@ -3,7 +3,7 @@ function R=region_saveasimg(R,Vol,varargin)
 % Saves a region field as a *.nii file in the same
 % resolution and orientation as Vol
 % VARGINOPTION
-% 'name',name     : Output name of the Volum
+% 'name',name     : Output name of the Volume
 % 'z',z           : varaible that gives brightness to voxels
 % Works only with SPM5
 % j.diedrichsen@bangor.ac.uk
