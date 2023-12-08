@@ -1,26 +1,44 @@
 function mycifti=region_make_cifti(R,Vol,varargin)
 % function R=region_make_cifti(R,Data,varargin)
 % Creates a dense cifti file (with BrainModel axis) for the data for a set
-% of regions. 
-% By default all are made into volume-based parcels. 
-% Surface functionality to be added 
+% of regions. By default all are made into volume-based parcels. 
+% This function relies on cifti-matlab 
+% https://github.com/Washington-University/cifti-matlab
 % INPUT: 
 %       R: Cell array of regions 
 %       Vol: Volume information (spm_vol): all need to refer to the same volume space
 % VARGINOPTION
-%       'data', data: Cell array of data matrices (voxels x measures)
-%                     If no data is given, it just makes the first
-%                     brainmodel axis. 
-%       'dtype', {'scalars','series','labels'}: Type of axis for the data
-%       'dnames', cell: Cell array of names for dtype=scalar 
-
+%       'data', data: 
+%               Cell array of data matrices (measures x voxels)
+%               If no data is given, it just makes the first
+%               brainmodel axis. 
+%       'dtype', {'scalars','series','labels'}: 
+%               Type of row-axis for the data
+%       'dnames', cell: 
+%               Cell array of names for dtype=scalar 
+%       'struct', cell: 
+%               Cell array of names for brain structures
+%               (CIFTI_BRAIN_STRUCTURES)
 % August 23,22 joern.diedrichsen@googlemail.com 
 
-data=[];
 dtype='scalars'; 
 dnames={}; 
+data={};
+struct = {}; 
 struct={'CEREBELLUM','BRAIN_STEM','OTHER','THALAMUS_LEFT','THALAMUS_RIGHT'};
 vararginoptions(varargin,{'data','dtype','dnames','struct'});
+
+% Deal with single input parameters
+if ~iscell(struct)
+    struct={struct}; 
+end 
+if ~iscell(data)
+    struct={data}; 
+end 
+if ~iscell(R)
+    struct={R}; 
+end
+
 
 mycifti.metadata = []; 
 mycifti.metadata = cifti_metadata_set(mycifti.metadata, 'Provenance', 'region_make_cifti');
@@ -34,8 +52,8 @@ bmaxis.vol.sform = Vol.mat; % Image affine
 start = 1; 
 for r=1:length(R)
     bm.start=start; 
-    bm.count = size(R{r}.data,1); 
-    bm.struct = struct{r};  % Unfortunately, we can't set the structure name to anything arbitary.
+    bm.count = size(R{r}.data,2); 
+    bm.struct = struct{r};  % Unfortunately, we can't set the structure name to anything arbitary - need to 
     bm.type = 'vox'; 
     [i,j,k] = spmj_affine_transform(R{r}.data(:,1),R{r}.data(:,2),R{r}.data(:,3),inv(Vol.mat)); 
     bm.voxlist = [i j k]'-1;  % voxlist is zero-based indices 
@@ -45,7 +63,7 @@ for r=1:length(R)
         if size(data{r},1)~=bm.count
             error('Number of columns does not correspond to region %d',r); 
         end
-        mycifti.cdata=[mycifti.cdata;data{r}];
+        mycifti.cdata=[mycifti.cdata;data{r}'];
     end
 end
 bmaxis.length=size(mycifti.cdata,1);
@@ -53,7 +71,7 @@ bmaxis.length=size(mycifti.cdata,1);
 % Generate the correct data axis 
 if ~isempty(data)
     daxis.type=dtype; 
-    daxis.length = size(mycifti.cdata,2);
+    daxis.length = size(mycifti.cdata,1);
     if (isempty(dnames) && ~strcmp(dtype,'series')) 
         for i=1:daxis.length
             dnames{i}=sprintf('row %d',i); 
