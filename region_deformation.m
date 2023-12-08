@@ -9,9 +9,9 @@ function R=region_deformation(R,deffile,varargin)
 %           For dartel:{'u_a_<file>','Affine_file'}
 %           in general: {Def,mat} (from spmdefs)
 % VARARGIN:
-%      'vol': Volume or file with dim,mat to define voxelspace
+%      'vol':  Volume or file with dim,mat to define voxelspace
 %      'mask': Volume or file to define mask - if mask is given, it is also
-%               used to define the voxel space
+%               used to define the voxel space 
 % RETURN: 
 %       region structure in individual space
 %       
@@ -76,7 +76,7 @@ if (~isempty(mimg))
 
         % If mask, only use voxels within mask
         if (~isempty(mask))
-            good(good) = spm_sample_vol(mimg,vox(good,1),vox(good,2),vox(good,3),0)>0;
+            good(good) = spm_sample_vol(mimg,vox(good,1),vox(good,2),vox(good,3),1)>0;
         end
         
         % Boil down to the unique voxel, retain mapping 

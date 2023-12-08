@@ -2,14 +2,17 @@ function mycifti=region_make_cifti(R,Vol,varargin)
 % function R=region_make_cifti(R,Data,varargin)
 % Creates a dense cifti file (with BrainModel axis) for the data for a set
 % of regions. By default all are made into volume-based parcels. 
+% Comments: 
 % This function relies on cifti-matlab 
 % https://github.com/Washington-University/cifti-matlab
+% Note that the row-dimension is dimension 2 and the colum-dimension is
+% dimension 1 - so reversed from the nibabel convention  
 % INPUT: 
 %       R: Cell array of regions 
 %       Vol: Volume information (spm_vol): all need to refer to the same volume space
 % VARGINOPTION
 %       'data', data: 
-%               Cell array of data matrices (measures x voxels)
+%               Cell array of data matrices (voxels x measures)
 %               If no data is given, it just makes the first
 %               brainmodel axis. 
 %       'dtype', {'scalars','series','labels'}: 
@@ -52,18 +55,18 @@ bmaxis.vol.sform = Vol.mat; % Image affine
 start = 1; 
 for r=1:length(R)
     bm.start=start; 
-    bm.count = size(R{r}.data,2); 
+    bm.count = size(R{r}.data,1); 
     bm.struct = struct{r};  % Unfortunately, we can't set the structure name to anything arbitary - need to 
     bm.type = 'vox'; 
     [i,j,k] = spmj_affine_transform(R{r}.data(:,1),R{r}.data(:,2),R{r}.data(:,3),inv(Vol.mat)); 
-    bm.voxlist = [i j k]'-1;  % voxlist is zero-based indices 
+    bm.voxlist = int16([i j k])'-1;  % voxlist is zero-based indices 
     start = start + bm.count; 
     bmaxis.models{r}=bm;
     if ~isempty(data)
         if size(data{r},1)~=bm.count
             error('Number of columns does not correspond to region %d',r); 
         end
-        mycifti.cdata=[mycifti.cdata;data{r}'];
+        mycifti.cdata=[mycifti.cdata;data{r}];
     end
 end
 bmaxis.length=size(mycifti.cdata,1);
@@ -71,7 +74,7 @@ bmaxis.length=size(mycifti.cdata,1);
 % Generate the correct data axis 
 if ~isempty(data)
     daxis.type=dtype; 
-    daxis.length = size(mycifti.cdata,1);
+    daxis.length = size(mycifti.cdata,2);
     if (isempty(dnames) && ~strcmp(dtype,'series')) 
         for i=1:daxis.length
             dnames{i}=sprintf('row %d',i); 
