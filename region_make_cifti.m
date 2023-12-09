@@ -36,10 +36,10 @@ if ~iscell(struct)
     struct={struct}; 
 end 
 if ~iscell(data)
-    struct={data}; 
+    data={data}; 
 end 
 if ~iscell(R)
-    struct={R}; 
+    R={R}; 
 end
 
 
