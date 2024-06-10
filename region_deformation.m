@@ -1,7 +1,15 @@
 function R=region_deformation(R,deffile,varargin)
 % function R=spmj_deformation(R,deffile,varargin)
 % Deforms regions of interest from atlas into individual space, retaining
-% the mapping
+% the number of original points (x,y,z) locations in the atlas space. 
+% If not vol/mask is given 
+%   The new coordiantes are stored in R{r}.data field 
+% If vol/mask is given 
+%   It identifies the unqiue voxels in individual space and saves their
+%   coordinates in the R.data field. 
+%   It retains the origial points in R.deform 
+%   and the mapping between the original and group space in R.map 
+% 
 % INPUT:
 %      R: Single region or cell array of regions
 %      deffile: Deformation info
@@ -42,7 +50,7 @@ else
     error('deformation cell array needs to cell array or a single filename (for all normalization');
 end
 
-% Apply the deformation:
+% Apply the nonlinear deformation:
 for r=1:length(R)
     R{r}.original = R{r}.data;
     [R{r}.data(:,1),R{r}.data(:,2),R{r}.data(:,3)]=spmdefs_transform(Def,mat,R{r}.data(:,1),R{r}.data(:,2),R{r}.data(:,3));
