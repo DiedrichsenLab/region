@@ -66,4 +66,4 @@ for r=1:length(R)
     mycifti.cdata = [mycifti.cdata;data];
     mycifti.diminfo{1}.models{r}=bm; 
 end    
-bmaxis.length=size(mycifti.cdata,1);
+mycifti.diminfo{1}.length=size(mycifti.cdata,1);
