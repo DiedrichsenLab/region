@@ -2,13 +2,21 @@ function R=region_deformation(R,deffile,varargin)
 % function R=spmj_deformation(R,deffile,varargin)
 % Deforms regions of interest from atlas into individual space, retaining
 % the number of original points (x,y,z) locations in the atlas space. 
-% If not vol/mask is given 
-%   The new coordiantes are stored in R{r}.data field 
-% If vol/mask is given 
-%   It identifies the unqiue voxels in individual space and saves their
-%   coordinates in the R.data field. 
-%   It retains the origial points in R.deform 
-%   and the mapping between the original and group space in R.map 
+% If no vol/mask is given: 
+%  -   The old (group) coordinates are in R{r}.original 
+%  -  The new (subject) coordiantes are stored in R{r}.data field 
+%  -  Both have the same size 
+% If vol/mask is given, the function identifies the unique voxels in the space of the mask image 
+% This helps with efficiency, if we want to load functional time-series data from individual subject, 
+% So we don't load the same voxel multiple times 
+%  -  The group coordinates are in R{r}.original 
+%  -   The subject coordiantes are stored in R{r}.deform field (same size as
+%    original) 
+%  - The unqiue voxels centers are stored in R{r}.data 
+%  - The R{r}.map stores the relationship between subject voxel and group
+%  coordinate, such that group_data=subj_data[R{r}.map]
+%  - If a group ROI location is not in the mask, R{r}.map for that location
+%  will be 0 -> group data should be set to NaN. 
 % 
 % INPUT:
 %      R: Single region or cell array of regions

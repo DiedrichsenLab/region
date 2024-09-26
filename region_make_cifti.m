@@ -22,14 +22,17 @@ function mycifti=region_make_cifti(R,Vol,varargin)
 %       'struct', cell: 
 %               Cell array of names for brain structures
 %               (CIFTI_BRAIN_STRUCTURES)
+%       'TR', tr: 
+%               TR is seconds, used when dtype = series
 % August 23,22 joern.diedrichsen@googlemail.com 
 
 dtype='scalars'; 
 dnames={}; 
 data={};
-struct = {}; 
+struct = {};
+TR = 1.0; 
 struct={'CEREBELLUM','BRAIN_STEM','OTHER','THALAMUS_LEFT','THALAMUS_RIGHT'};
-vararginoptions(varargin,{'data','dtype','dnames','struct'});
+vararginoptions(varargin,{'data','dtype','dnames','struct','TR'});
 
 % Deal with single input parameters
 if ~iscell(struct)
@@ -86,8 +89,8 @@ if ~isempty(data)
     switch(dtype)
         case 'series'
             daxis.seriesStart=0; 
-            daxis.seriesStep =1.0; 
-            daxis.seriesUNIT='SECOND';
+            daxis.seriesStep = TR; 
+            daxis.seriesUnit='SECOND';
         case 'scalars'
             for i=1:daxis.length
                 daxis.maps(i).name = dnames{i}; 
