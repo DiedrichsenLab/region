@@ -59,7 +59,10 @@ for r=1:length(R)
     bm.struct = struct{r};  % Unfortunately, we can't set the structure name to anything arbitary - need to 
     bm.type = 'vox'; 
     [i,j,k] = spmj_affine_transform(R{r}.data(:,1),R{r}.data(:,2),R{r}.data(:,3),inv(Vol.mat)); 
-    bm.voxlist = int16([i j k])'-1;  % voxlist is zero-based indices 
+    bm.voxlist = int16([i j k])'-1;  % voxlist is zero-based indices
+    if size(unique(bm.voxlist','rows'),1) ~= size(bm.voxlist,2)
+        error('voxel are not unique- Volume used for region_calc_regions or region_deformation may not match the volume provided here'); 
+    end 
     start = start + bm.count; 
     bmaxis.models{r}=bm;
     if ~isempty(data)

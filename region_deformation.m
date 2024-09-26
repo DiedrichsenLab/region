@@ -45,7 +45,7 @@ if iscell(deffile)
         error('deformation cell array needs to contain filenames or matrices');
     end
 elseif ischar(deffile)
-    [Def,mat]=spmdefs_get_sn2def(paramfile);
+    [Def,mat]=spmdefs_get_def(deffile);
 else
     error('deformation cell array needs to cell array or a single filename (for all normalization');
 end
